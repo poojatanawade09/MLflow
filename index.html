@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLflow Multiple Model Hyperparameter Tuning</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #0366d6;
+        }
+        .screenshot {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 100%;
+        }
+        pre {
+            background-color: #f6f8fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            font-size: 14px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .placeholder {
+            background-color: #f0f0f0;
+            padding: 100px;
+            text-align: center;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>MLflow Multiple Model Hyperparameter Tuning</h1>
+    
+    <div class="section">
+        <h2>Project Overview</h2>
+        <p>
+            This project demonstrates how to use MLflow to track and compare multiple machine learning models 
+            with different hyperparameters on the Iris dataset. The script trains three different models 
+            (SVM, Random Forest, and Logistic Regression) with various hyperparameters using GridSearchCV.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Code Implementation</h2>
+        <pre><code>import mlflow
+import pandas as pd
+from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn import svm, datasets
+from sklearn.model_selection import GridSearchCV
+iris = datasets.load_iris()
+
+model_params = {
+    'svm': {
+        'model': svm.SVC(gamma='auto'),
+        'params' : {
+            'C': [1,10,50],
+            'kernel': ['rbf','linear']
+        }  
+    },
+    'random_forest': {
+        'model': RandomForestClassifier(),
+        'params' : {
+            'n_estimators': [1,5,10]
+        }
+    },
+    'logistic_regression' : {
+        'model': LogisticRegression(solver='liblinear',multi_class='auto'),
+        'params': {
+            'C': [1,5,10]
+        }
+    }
+}
+scores = []
+
+mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+mlflow.set_experiment("MultipleModels_Mlflow1")
+
+with mlflow.start_run(run_name="MultipleModels"):
+    for model_name, mp in model_params.items():
+     clf =  GridSearchCV(mp['model'], mp['params'], cv=5, return_train_score=False)
+     clf.fit(iris.data, iris.target)
+     results=pd.DataFrame(clf.cv_results_)
+     
+     for i, params in enumerate(clf.cv_results_["params"]):
+        with mlflow.start_run(run_name=f"run_{i}{model_name}", nested=True):
+            acc = clf.cv_results_["mean_test_score"][i]
+            mlflow.log_params(params)
+            mlflow.log_metric("mean_test_score", acc)
+     scores.append({
+        'model': model_name,
+        'best_score': clf.best_score_,
+        'best_params': clf.best_params_
+     })
+     with mlflow.start_run(run_name=f"best_model_{model_name}",nested=True):
+        mlflow.log_params(clf.best_params_)
+        mlflow.log_metric("best_score", clf.best_score_)
+        
+        # Train the best model with optimal parameters
+        best_model = mp['model']
+        best_model.set_params(**clf.best_params_)
+        best_model.fit(iris.data, iris.target)
+        
+        # Register the model in MLflow
+        mlflow.sklearn.log_model(
+            sk_model=best_model,
+            artifact_path=f"models/{model_name}",
+            registered_model_name=f"Iris-{model_name}"
+        )
+    df = pd.DataFrame(scores,columns=['model','best_score','best_params'])
+    print(df)</code></pre>
+    </div>
+
+    <div class="section">
+        <h2>Results</h2>
+        <h3>Model Comparison</h3>
+        <p>The table below shows the best performance for each model type:</p>
+        
+        <div class="placeholder">
+            [Screenshot: Replace with actual screenshot of the DataFrame output showing model comparison]
+        </div>
+        
+        <h3>MLflow Experiment Overview</h3>
+        <div class="placeholder">
+            [Screenshot: Replace with MLflow UI showing the experiment with all runs]
+        </div>
+        
+        <h3>Model Details</h3>
+        <h4>SVM Model</h4>
+        <div class="placeholder">
+            [Screenshot: Replace with MLflow UI showing SVM model details]
+        </div>
+        
+        <h4>Random Forest Model</h4>
+        <div class="placeholder">
+            [Screenshot: Replace with MLflow UI showing Random Forest model details]
+        </div>
+        
+        <h4>Logistic Regression Model</h4>
+        <div class="placeholder">
+            [Screenshot: Replace with MLflow UI showing Logistic Regression model details]
+        </div>
+        
+        <h3>Registered Models in MLflow</h3>
+        <div class="placeholder">
+            [Screenshot: Replace with MLflow UI showing registered models]
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>How to Run</h2>
+        <ol>
+            <li>Start the MLflow tracking server:
+                <pre><code>mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./artifacts --host 127.0.0.1 --port 5000</code></pre>
+            </li>
+            <li>Run the script:
+                <pre><code>python multiple_model_hyperparameter.py</code></pre>
+            </li>
+            <li>Open the MLflow UI at <a href="http://127.0.0.1:5000">http://127.0.0.1:5000</a></li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h2>Key Insights</h2>
+        <ul>
+            <li>MLflow allows tracking of multiple models and their hyperparameters in a single experiment</li>
+            <li>Nested runs help organize different aspects of the experiment</li>
+            <li>The Model Registry provides versioning and lifecycle management for your models</li>
+            <li>Hyperparameter tuning results are easily comparable through the MLflow UI</li>
+        </ul>
+    </div>
+
+    <footer>
+        <p>Created with MLflow and scikit-learn</p>
+    </footer>
+</body>
+</html>
