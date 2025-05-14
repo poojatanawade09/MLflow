@@ -62,12 +62,14 @@ http://127.0.0.1:5000
 📸 Results & Screenshots
 🔹 MLflow Experiment Page
 ![Experiment Page](screenshots/MLflow_experiment_page1.png)
-![](screenshots/MLflow_experiment_page2.png)
+
+![](screenshots/Mlflow_experiment_page2.png)
 
 🔹 Hyperparameter Trial
 ![](screenshots/MLflow_run_params.png)
 
 🔹 Registered Best Models
+
 Final models registered in MLflow Model Registry.
 ![](screenshots/MLflow_best_registered.png)
 
@@ -79,11 +81,14 @@ Logistic Regression Parallel Coordinates Plot
 
 Random Forest Parallel Coordinates Plot
 ![](screenshots/RandomForest.png)
+
+
 📈 Results Summary
-Model	            Best Accuracy	   Best Parameters
-SVM	                    0.98	       C=1, kernel='rbf'
-Random Forest	        0.966	       n_estimators=10
-Logistic Regression	    0.966	       C=5
+| Model | Best Accuracy | Best Parameters |
+|-------|--------------|----------------|
+| SVM | 0.98 | C=1, kernel='rbf' |
+| Random Forest | 0.966 | n_estimators=10 |
+| Logistic Regression | 0.966 | C=5 |
 
 
 SVM  achieved the highest accuracy (0.98)
